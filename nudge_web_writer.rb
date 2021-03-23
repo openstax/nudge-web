@@ -59,9 +59,7 @@ loop do
         book_uuid = nudge['context'] = nudge['context']   #book id isnt compacted
 
         file_name = full_file_name(user_uuid, book_uuid)
-
-        puts "Opening file #{file_name} for content #{nudge.to_s}"
-
+        # puts "Opening file #{file_name} for content #{nudge.to_s}"
         file = File.open(file_name,'a+')
         data = JSON.parse(file.read) rescue []
         data.append(nudge)
