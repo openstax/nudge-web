@@ -5,7 +5,7 @@ require 'avro_turf/messaging'
 require 'json'
 
 # Process.daemon()
-
+KAFKA_HOST = 'localhost:9092'
 COMPACT_FORM = /(\w{8})(\w{4})(\w{4})(\w{4})(\w{12})/i
 FILE_SHARED_VOLUME = '/tmp/'
 SCHEMA_REGISTRY_URL = 'http://localhost:8081/'
@@ -36,11 +36,15 @@ def kafka_consumer
 end
 
 def kafka
-  @kafka ||= Kafka.new(['localhost:9092'])
+  @kafka ||= Kafka.new([KAFKA_HOST])
 end
 
 def avroturf
   @avro ||= AvroTurf::Messaging.new(registry_url: SCHEMA_REGISTRY_URL)
+end
+
+def full_file_name(user_uuid, book_uuid)
+  FILE_SHARED_VOLUME + "#{user_uuid}_#{book_uuid}.json"
 end
 
 loop do
@@ -54,12 +58,15 @@ loop do
         nudge['session_uuid'] = unpack(nudge['session_uuid'])
         user_uuid = nudge['user_uuid'] = unpack(nudge['user_uuid'])
         book_uuid = nudge['context'] = unpack(nudge['context'])
-        file_name = FILE_SHARED_VOLUME + "#{user_uuid}_#{book_uuid}.json"
+
+        file_name = full_file_name(user_uuid, book_uuid)
 
         puts "Opening file #{file_name} for content #{nudge.to_s}"
-        File.open(file_name, 'a') do |file|
-          file.puts(nudge.to_json)
-        end
+
+        file = File.open(file_name,'a+')
+        data = JSON.parse(file.read) rescue []
+        data.append(nudge)
+        File.write(file_name, JSON.dump(data))
       rescue => ex
         puts ex.inspect
         next
