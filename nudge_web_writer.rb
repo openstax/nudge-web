@@ -53,7 +53,6 @@ loop do
       begin
         nudge = avroturf.decode(message.value, schema_name: NUDGED_SCHEMA_NAME)
 
-        # puts "Reading message from consumer: #{nudge.inspect}"
         nudge['device_uuid'] = unpack(nudge['device_uuid'])
         nudge['session_uuid'] = unpack(nudge['session_uuid'])
         user_uuid = nudge['user_uuid'] = unpack(nudge['user_uuid'])
@@ -75,5 +74,4 @@ loop do
   rescue Kafka::ProcessingError => ex
     puts ex.cause.inspect
   end
-  # sleep(10)  # 10 second breather
 end
