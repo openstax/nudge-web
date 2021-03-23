@@ -57,7 +57,7 @@ loop do
         nudge['device_uuid'] = unpack(nudge['device_uuid'])
         nudge['session_uuid'] = unpack(nudge['session_uuid'])
         user_uuid = nudge['user_uuid'] = unpack(nudge['user_uuid'])
-        book_uuid = nudge['context'] = unpack(nudge['context'])
+        book_uuid = nudge['context'] = nudge['context']   #book id isnt compacted
 
         file_name = full_file_name(user_uuid, book_uuid)
 
