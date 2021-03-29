@@ -3,6 +3,8 @@ require 'ruby-kafka'
 require 'avro_turf'
 require 'avro_turf/messaging'
 require 'json'
+require_relative 'nudge_web_api'
+
 
 # Process.daemon()
 KAFKA_HOST = 'localhost:9092'
@@ -47,6 +49,13 @@ def full_file_name(user_uuid, book_uuid)
   FILE_SHARED_VOLUME + "#{user_uuid}_#{book_uuid}.json"
 end
 
+def user_book_file_contents(user_uuid:, book_uuid:)
+  file_name = full_file_name(user_uuid, book_uuid)
+  # puts "Opening file #{file_name} for content #{nudge.to_s}"
+  file = File.open(file_name,'a+')
+  JSON.parse(file.read) rescue []
+end
+
 loop do
   begin
     kafka_consumer.each_message() do |message|
@@ -57,11 +66,8 @@ loop do
         nudge['session_uuid'] = unpack(nudge['session_uuid'])
         user_uuid = nudge['user_uuid'] = unpack(nudge['user_uuid'])
         book_uuid = nudge['context'] = nudge['context']   #book id isnt compacted
+        data = user_book_file_contents(user_uuid: user_uuid, book_uuid: book_uuid)
 
-        file_name = full_file_name(user_uuid, book_uuid)
-        # puts "Opening file #{file_name} for content #{nudge.to_s}"
-        file = File.open(file_name,'a+')
-        data = JSON.parse(file.read) rescue []
         data.append(nudge)
         File.write(file_name, JSON.dump(data))
       rescue => ex
